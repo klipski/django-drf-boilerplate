@@ -1,0 +1,50 @@
+version: "3.9"
+
+services:
+  redis:
+    image: redis:6.2
+
+  postgres:
+    image: postgres:13.1
+    restart: always
+    volumes:
+      - "db_data:/var/lib/postgresql/data"
+    ports:
+      - "5432:5432"
+    env_file:
+      - ./app/.env
+
+  django:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - ./app:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+
+  celery:
+    build: .
+    command: celery -A app worker -l info
+    volumes:
+      - ./app:/code
+    depends_on:
+      - postgres
+      - redis
+      - django
+
+  beat:
+    build: .
+    command: celery -A app beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler
+    volumes:
+      - ./app:/code
+    depends_on:
+      - postgres
+      - redis
+      - django
+      - celery
+
+volumes:
+  db_data:
+    external: true
