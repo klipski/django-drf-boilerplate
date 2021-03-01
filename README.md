@@ -3,6 +3,9 @@
 ## Description
 This is a simple template repository for new projects.
 
+## Setup
+Create `.env` file in `app` directory from template file `env.template`.
+
 ## Installation
 ```
 # create postgres volume
